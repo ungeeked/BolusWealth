@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<!-- Warm up DNS+TLS to the SectorScope Worker (cross-origin data source). -->
+<link rel="preconnect" href="https://sectorscope.prashant-06f.workers.dev" crossorigin>
+<title>BolusWealth - Nifty 50 Wealth Maximization Model</title>
+<meta name="description" content="Buy the bottoms. Sell the tops. The Ned Davis / Martin Zweig model on the Nifty 50, live from NSE.">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boluswealth.pages.dev">
+<meta property="og:title" content="BolusWealth - Nifty 50 Wealth Maximization Model">
+<meta property="og:description" content="Buy the bottoms. Sell the tops. The Ned Davis / Martin Zweig model on the Nifty 50, live from NSE.">
+<meta property="og:image" content="https://boluswealth.pages.dev/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://boluswealth.pages.dev/assets/og-image.png">
+<!-- Set theme before CSS parse to kill the flash. Light is default; dark only if chosen. -->
+<script>(function(){try{var t=localStorage.getItem('bw_theme');if(t!=='dark')document.documentElement.classList.add('light');}catch(e){document.documentElement.classList.add('light');}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080b12;--bg2:#0d1120;--bg3:#131929;--sur:#1a2035;
+  --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.04);
+  --txt:#dce5f5;--sub:#7a8fb0;--ghost:#364460;
+  --mono:'JetBrains Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;--ttl:'Bebas Neue',cursive;
+  /* semantic chart colours (match SectorScope's pos/neg/line hues) */
+  --up:#34d399;--down:#f87171;--line:#38bdf8;--warn:#ffd740;
+}
+html.light{
+  --bg:#eef1f8;--bg2:#fff;--bg3:#f4f7fc;--sur:#e8edf7;
+  --bdr:rgba(0,0,0,.08);--bdr2:rgba(0,0,0,.04);
+  --txt:#0f172a;--sub:#475a7a;--ghost:#7a8fb0;
+  --up:#059669;--down:#dc2626;--line:#0ea5e9;--warn:#b45309;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-gutter:stable}
+body{background:var(--bg);color:var(--txt);font-family:var(--body);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(99,102,241,.06) 0%,transparent 55%),radial-gradient(ellipse 60% 45% at 88% 105%,rgba(16,185,129,.04) 0%,transparent 50%)}
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 18px 60px}
+
+/* ── HEADER ── */
+header{position:sticky;top:0;z-index:50;padding:10px 18px;display:flex;align-items:center;gap:10px;justify-content:space-between;background:rgba(8,11,18,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);transition:background .3s}
+html.light header{background:rgba(238,241,248,.94)}
+.h-inner{max-width:980px;margin:0 auto;width:100%;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.h-brand{display:flex;flex-direction:row;align-items:center;gap:11px;min-width:0}
+.h-mark{width:38px;height:38px;flex:none;border-radius:10px;display:block}
+.h-brandtext{display:flex;flex-direction:column;gap:3px;min-width:0}
+.h-name{font-family:var(--ttl);font-size:1.7rem;line-height:.9;letter-spacing:.5px;color:var(--txt);display:flex;align-items:baseline;gap:0}
+.h-name .w2{color:var(--up)}
+.h-sub{font-family:var(--mono);font-size:.5rem;color:var(--ghost);letter-spacing:1.4px;text-transform:uppercase;margin-top:4px}
+.theme-pill{width:50px;height:26px;background:var(--bg3);border:1px solid var(--bdr);border-radius:26px;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0;padding:0}
+.theme-pip{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--sur);display:flex;align-items:center;justify-content:center;font-size:.62rem;transform:translateX(24px);transition:transform .32s cubic-bezier(.34,1.56,.64,1),background .3s}
+html.light .theme-pip{transform:translateX(0)}
+
+/* ── INTRO ── */
+.intro{margin:22px 0 16px}
+.intro h1{font-family:var(--cond);font-weight:800;font-size:1.85rem;letter-spacing:.3px;line-height:1.05}
+.intro p{color:var(--sub);font-size:.92rem;margin-top:6px;max-width:680px;line-height:1.55}
+
+/* ── CARD ── */
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+
+/* ── STATE BADGE ── */
+#trendBadge{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;padding:15px 18px;margin-bottom:16px}
+.bw-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.bw-state .tri{font-size:.85rem}
+.bw-state .trend{font-family:var(--cond);font-weight:800;font-size:1.25rem;letter-spacing:.5px}
+.bw-state .muted{color:var(--sub);font-size:.85rem}
+.bw-sub{font-size:.82rem;color:var(--sub);line-height:1.55}
+.bw-sub strong{color:var(--txt);font-family:var(--mono);font-weight:600}
+
+/* ── CHART ── */
+.chart-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--cond);font-weight:700;font-size:1.05rem;letter-spacing:.3px;margin-bottom:12px}
+.chart-title .tdim{font-family:var(--body);font-weight:400;font-size:.72rem;color:var(--ghost);letter-spacing:0}
+.legend{display:flex;gap:12px;margin-left:auto;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--sub);font-family:var(--mono)}
+.legend-dot{width:9px;height:9px;border-radius:2px}
+#trendChartArea{position:relative;display:flex;align-items:stretch;gap:0;width:100%}
+#trendAxisSvg{flex:0 0 auto;display:block}
+#trendChartScroll{flex:1 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden}
+#trendChartSvg{display:block}
+#trendChartScroll::-webkit-scrollbar{height:8px}
+#trendChartScroll::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px}
+
+/* tooltip - mirrors SectorScope's .gl-tip */
+.gl-tip{position:absolute;z-index:6;pointer-events:none;background:var(--bg3);border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;min-width:150px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+html.light .gl-tip{box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.gl-tip-d{font-family:var(--mono);font-size:.58rem;color:var(--ghost);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--bdr)}
+.gl-tip-r{display:flex;align-items:center;gap:7px;line-height:1.6;font-size:.72rem}
+.gl-tip-sw{width:9px;height:9px;border-radius:2px;flex:none}
+.gl-tip-n{color:var(--txt);flex:1;white-space:nowrap}
+.gl-tip-v{font-family:var(--mono);color:var(--txt);font-weight:600;white-space:nowrap}
+
+/* ── TABLE ── */
+.bw-tablewrap{overflow:auto;max-height:440px}
+table.bw-tbl{width:100%;border-collapse:collapse;font-size:.82rem}
+table.bw-tbl th{position:sticky;top:0;background:var(--bg2);font-family:var(--mono);font-size:.56rem;letter-spacing:.6px;text-transform:uppercase;color:var(--ghost);text-align:left;padding:8px 10px;border-bottom:1px solid var(--bdr);white-space:nowrap}
+table.bw-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr2);vertical-align:top}
+table.bw-tbl td.num,table.bw-tbl th.num{text-align:right;font-family:var(--mono)}
+table.bw-tbl tr:hover td{background:var(--bg3)}
+.cell-sub{font-size:.66rem;color:var(--ghost);font-family:var(--mono);margin-top:2px}
+
+/* ── NOTE / FOOTER ── */
+.note{font-size:.78rem;color:var(--sub);line-height:1.6;background:var(--bg3);border:1px solid var(--bdr);border-radius:12px;padding:13px 15px}
+.note strong{color:var(--txt)}
+.note em{color:var(--sub);font-style:italic}
+footer{margin-top:22px;font-family:var(--mono);font-size:.6rem;color:var(--ghost);letter-spacing:.4px;line-height:1.7;text-align:center}
+footer a{color:var(--sub);text-decoration:none}
+
+/* ── LOADING / ERROR ── */
+.bw-loading,.bw-error{padding:40px 18px;text-align:center;color:var(--sub);font-size:.9rem}
+.bw-error{color:var(--down)}
+.spinner{width:26px;height:26px;border:3px solid var(--bdr);border-top-color:var(--line);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:560px){
+  .intro h1{font-size:1.5rem}
+  .legend{margin-left:0;width:100%}
+  .h-name{font-size:1.45rem}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-inner">
+    <div class="h-brand">
+      <img class="h-mark" src="assets/logomark.svg" alt="BolusWealth logo" width="38" height="38">
+      <div class="h-brandtext">
+        <div class="h-name">Bolus<span class="w2">Wealth</span></div>
+        <div class="h-sub">Nifty 50 · Wealth Maximization model</div>
+      </div>
+    </div>
+    <button class="theme-pill" id="theme-pill-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+      <span class="theme-pip" id="theme-pip">🌙</span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Nifty 50 - Tops &amp; Bottoms</h1>
+    <p>Based on Ned Davis / Martin Zweig's model: a swing <span style="color:var(--down)">top</span> is confirmed when a weekly close falls 4% below a prior high, a <span style="color:var(--up)">bottom</span> when it rises 4% above a prior low. Below: the live signal, the chart, and every bottom→top up-cycle.</p>
+  </div>
+
+  <div id="bwLoading" class="bw-loading"><div class="spinner"></div>Loading</div>
+  <div id="bwError" class="bw-error" style="display:none"></div>
+
+  <div id="bwApp" style="display:none">
+    <div id="trendBadge"></div>
+
+    <div class="card">
+      <div class="chart-title">
+        Nifty 50 <span class="tdim">(Friday close · ~1yr in view · scroll ← for history · hover for values)</span>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:var(--line)"></span>Nifty 50</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--down)"></span>Top</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--up)"></span>Bottom</div>
+        </div>
+      </div>
+      <div id="trendChartArea">
+        <svg id="trendAxisSvg"></svg>
+        <div id="trendChartScroll"><svg id="trendChartSvg"></svg></div>
+        <div id="trendTip" class="gl-tip" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="bw-tablewrap">
+        <table class="bw-tbl">
+          <thead><tr>
+            <th>Bottom (buy)</th><th>Top (sell)</th>
+            <th class="num">Up-cycle duration</th><th class="num">Up-cycle return</th>
+          </tr></thead>
+          <tbody id="trendTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Reading it:</strong> A red arrow marks a swing <strong style="color:var(--down)">top</strong>, a green arrow a swing <strong style="color:var(--up)">bottom</strong>; hover anywhere for the date and index level. The reversal confirms on a weekly close 4% off the swing extreme, so the latest leg may still be forming (see the banner). The table pairs each bottom with the following top and shows the up-cycle's length and gain. <em>Mechanical model for study only - not investment advice.</em>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   THEME
+============================================================ */
+function toggleTheme(){
+  var light=document.documentElement.classList.toggle('light');
+  document.getElementById('theme-pip').textContent=light?'☀️':'🌙';
+  localStorage.setItem('bw_theme',light?'light':'dark');
+}
+(function(){ var light=document.documentElement.classList.contains('light');
+  var p=document.getElementById('theme-pip'); if(p) p.textContent=light?'☀️':'🌙'; })();
+
+/* ============================================================
+   DATA - live Nifty 50 from SectorScope's D1-backed Worker
+============================================================ */
+var WORKER_BASE='https://sectorscope.prashant-06f.workers.dev';
+var HISTORY=null;
+
+/* Parse the /sector response into [dateStr, close] rows. Mirrors
+   SectorScope's normalise(): accepts a bare array or {data|rows:[...]},
+   array-rows [date,close,pe,pb,...] or object-rows {date,close|price,...},
+   and skips a leading header row. */
+function normaliseSector(raw){
+  var rows=Array.isArray(raw)?raw:(raw&&raw.data?raw.data:(raw&&raw.rows?raw.rows:[]));
+  if(rows.length&&Array.isArray(rows[0])&&typeof rows[0][0]==='string'&&isNaN(rows[0][0])) rows=rows.slice(1);
+  var out=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i], date, close;
+    if(Array.isArray(r)){ date=String(r[0]||''); close=+r[1]; }
+    else { date=String(r.date||r.Date||''); close=+(r.close||r.price||r.index||r.value); }
+    if(date && isFinite(close) && close>0) out.push([date, close]);
+  }
+  out.sort(function(a,b){ return a[0]<b[0]?-1:(a[0]>b[0]?1:0); });
+  return out;
+}
+
+function loadData(){
+  var url=WORKER_BASE+'/sector/'+encodeURIComponent('Nifty 50');
+  return fetch(url,{redirect:'follow'}).then(function(res){
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.text();
+  }).then(function(txt){
+    var raw; try{ raw=JSON.parse(txt); }catch(e){ throw new Error('Bad JSON from worker'); }
+    var rows=normaliseSector(raw);
+    if(rows.length<30) throw new Error('Only '+rows.length+' rows returned');
+    return rows;
+  });
+}
+
+/* ============================================================
+   4% MODEL - weekly Friday closes (labelled at the Monday)
+============================================================ */
+var TREND_THR=4;
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function trendFmt(n){ try{ return Math.round(n).toLocaleString('en-IN'); }catch(e){ return String(Math.round(n)); } }
+function trendSigned(n){ var r=Math.round(n); return (r>=0?'+':'\u2212')+Math.abs(r).toLocaleString('en-IN'); }
+function trendDay2(ds){ var d=new Date(ds); return d.getDate()+' '+MON[d.getMonth()]+" '"+String(d.getFullYear()).slice(2); }
+function typeLabel(t){ return (t==='TOP')?'top':'bottom'; }
+
+/* weekly value = last trading day's close (Friday), labelled at the week's Monday */
+function resampleWeekly(rows){
+  var map={}, order=[];
+  for(var i=0;i<rows.length;i++){
+    var d=new Date(rows[i][0]); var dow=(d.getDay()+6)%7;
+    var mon=new Date(d); mon.setDate(d.getDate()-dow);
+    var key=mon.toISOString().slice(0,10);
+    if(map[key]===undefined) order.push(key);
+    map[key]=rows[i][1];
+  }
+  return order.map(function(k){ return [k, map[k]]; });
+}
+
+function computeFourPct(history, thrPct){
+  var thr=thrPct/100;
+  var series=resampleWeekly(history).filter(function(r){ return r[1]>0; });
+  var out={series:series, pivots:[], state:null};
+  if(series.length<2) return out;
+
+  var pos='flat', hi=series[0][1], hiDate=series[0][0], lo=series[0][1], loDate=series[0][0];
+  var pivots=[];
+  for(var i=1;i<series.length;i++){
+    var c=series[i][1], dt=series[i][0];
+    if(pos==='in'){
+      if(c>hi){hi=c;hiDate=dt;}
+      else if(c<=hi*(1-thr)){ pivots.push({date:hiDate,type:'TOP',level:hi}); pos='out'; lo=c; loDate=dt; }
+    } else if(pos==='out'){
+      if(c<lo){lo=c;loDate=dt;}
+      else if(c>=lo*(1+thr)){ pivots.push({date:loDate,type:'BOTTOM',level:lo}); pos='in'; hi=c; hiDate=dt; }
+    } else {
+      if(c>hi){hi=c;hiDate=dt;} if(c<lo){lo=c;loDate=dt;}
+      if(c>=lo*(1+thr)){ pivots.push({date:loDate,type:'BOTTOM',level:lo}); pos='in'; hi=c; hiDate=dt; }
+      else if(c<=hi*(1-thr)){ pivots.push({date:hiDate,type:'TOP',level:hi}); pos='out'; lo=c; loDate=dt; }
+    }
+  }
+
+  var lastClose=series[series.length-1][1], lastDate=series[series.length-1][0];
+  var lastPivot=pivots.length?pivots[pivots.length-1]:null;
+  var st;
+  if(pos==='in'){ var t1=hi*(1-thr);
+    st={trend:'UPTREND',lastPivot:lastPivot,candType:'TOP',candLevel:hi,candDate:hiDate,trigger:t1,distPct:(t1/lastClose-1)*100,lastClose:lastClose,lastDate:lastDate}; }
+  else if(pos==='out'){ var t2=lo*(1+thr);
+    st={trend:'DOWNTREND',lastPivot:lastPivot,candType:'BOTTOM',candLevel:lo,candDate:loDate,trigger:t2,distPct:(t2/lastClose-1)*100,lastClose:lastClose,lastDate:lastDate}; }
+  else { st={trend:'FORMING',lastPivot:null,candType:null,lastClose:lastClose,lastDate:lastDate}; }
+
+  out.pivots=pivots; out.state=st;
+  return out;
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+function renderTrend(){
+  if(!HISTORY||HISTORY.length<2) return;
+  var m=computeFourPct(HISTORY, TREND_THR);
+
+  var st=m.state, badge=document.getElementById('trendBadge');
+  if(st&&badge){
+    var up=(st.trend==='UPTREND'), down=(st.trend==='DOWNTREND');
+    var col=up?'var(--up)':(down?'var(--down)':'var(--warn)');
+    var tri=up?'▲':(down?'▼':'◆');
+    var lp=st.lastPivot;
+    var lpTxt=lp?(typeLabel(lp.type)+' on <strong>'+trendDay2(lp.date)+'</strong> @ <strong>'+trendFmt(lp.level)+'</strong>')
+                :'no confirmed pivot yet';
+    var candTxt='';
+    if(st.candType){
+      candTxt='Forming '+typeLabel(st.candType)+' @ <strong>'+trendFmt(st.candLevel)+'</strong> ('+trendDay2(st.candDate)+') - confirms on a weekly close '
+        +(up?'\u2264':'\u2265')+' <strong>'+trendFmt(st.trigger)+'</strong> <span style="color:var(--ghost)">('+st.distPct.toFixed(1)+'% away)</span>';
+    }
+    badge.innerHTML=
+        '<div class="bw-state"><span class="tri" style="color:'+col+'">'+tri+'</span>'
+      + '<span class="trend" style="color:'+col+'">'+st.trend+'</span>'
+      + '<span class="muted">last '+lpTxt+'</span></div>'
+      + '<div class="bw-sub">'+candTxt+'</div>';
+  }
+
+  renderTrendChart(m);
+  renderTrendTable(m);
+}
+
+function renderTrendChart(m){
+  var axis=document.getElementById('trendAxisSvg');
+  var svg=document.getElementById('trendChartSvg');
+  var wrap=document.getElementById('trendChartScroll');
+  var area=document.getElementById('trendChartArea');
+  var tip=document.getElementById('trendTip');
+  if(!svg||!wrap) return;
+  var series=m.series, pivots=m.pivots;
+  if(series.length<2){ svg.innerHTML=''; if(axis) axis.innerHTML=''; return; }
+
+  var H=320, padT=14, padB=30, iH=H-padT-padB, AW=48, padL=8, padR=14;
+  var TOPRES=22, BOTRES=22;
+  var dMin=new Date(series[0][0]), dMax=new Date(series[series.length-1][0]);
+  var span=(dMax-dMin)||1, totalDays=Math.max(1,span/864e5);
+  var visW=Math.max(300, wrap.clientWidth||640);
+  var iW=Math.round((visW-padL-padR)*(totalDays/365));
+  var fullW=iW+padL+padR;
+  function xp(d){ return padL+((new Date(d)-dMin)/span)*iW; }
+  function xToT(x){ return dMin.getTime()+((x-padL)/iW)*span; }
+
+  /* uptrend (bottom → top) shading */
+  var endX=series[series.length-1][0], bands='';
+  for(var pi=0;pi<pivots.length;pi++){
+    if(pivots[pi].type!=='BOTTOM') continue;
+    var endDate=null;
+    for(var pj=pi+1;pj<pivots.length;pj++){ if(pivots[pj].type==='TOP'){ endDate=pivots[pj].date; break; } }
+    if(endDate===null) endDate=endX;
+    var bx0=xp(pivots[pi].date), bx1=xp(endDate);
+    bands+='<rect x="'+bx0+'" y="'+padT+'" width="'+Math.max(0,bx1-bx0)+'" height="'+iH+'" fill="var(--up)" opacity="0.07"/>';
+  }
+
+  /* alternate-month axis */
+  var mTicks='', mt=new Date(dMin.getFullYear(), dMin.getMonth(), 1);
+  for(; mt<=dMax; mt.setMonth(mt.getMonth()+1)){
+    if(mt.getMonth()%2!==0) continue;
+    if(mt<dMin) continue;
+    var mx=xp(mt.toISOString().slice(0,10));
+    var lbl=MON[mt.getMonth()]+(mt.getMonth()===0?" '"+String(mt.getFullYear()).slice(2):"");
+    mTicks+='<line x1="'+mx+'" x2="'+mx+'" y1="'+padT+'" y2="'+(padT+iH)+'" stroke="var(--bdr)" stroke-width="0.5" opacity="0.5"/>';
+    mTicks+='<text x="'+mx+'" y="'+(H-10)+'" text-anchor="middle" fill="var(--ghost)" font-size="9.5">'+lbl+'</text>';
+  }
+
+  svg.setAttribute('viewBox','0 0 '+fullW+' '+H);
+  svg.setAttribute('width',fullW); svg.setAttribute('height',H);
+  svg.style.width=fullW+'px'; svg.style.height=H+'px';
+  if(axis){ axis.setAttribute('viewBox','0 0 '+AW+' '+H); axis.setAttribute('width',AW); axis.setAttribute('height',H); axis.style.width=AW+'px'; axis.style.height=H+'px'; }
+
+  var curYp=null;
+  function draw(){
+    var vx0=wrap.scrollLeft, vx1=vx0+wrap.clientWidth;
+    var t0=xToT(vx0-padL), t1=xToT(vx1+padR);
+    var vis=series.filter(function(r){ var t=new Date(r[0]).getTime(); return t>=t0&&t<=t1; });
+    if(vis.length<2) vis=series.slice(-2);
+    var vv=vis.map(function(r){ return r[1]; });
+    pivots.forEach(function(p){ var t=new Date(p.date).getTime(); if(t>=t0&&t<=t1) vv.push(p.level); });
+    var lnMin=Math.log(Math.min.apply(null,vv)), lnMax=Math.log(Math.max.apply(null,vv));
+    var pd=(lnMax-lnMin)*0.04||0.02; lnMin-=pd; lnMax+=pd;
+    var lnR=(lnMax-lnMin)||1;
+    var plotTop=padT+TOPRES, plotBot=padT+iH-BOTRES;
+    function yp(v){ return plotBot-((Math.log(v)-lnMin)/lnR)*(plotBot-plotTop); }
+    curYp=yp;
+
+    var grid='', ax='';
+    for(var g=0;g<=4;g++){
+      var lv=Math.exp(lnMin+lnR*g/4), y=plotBot-(plotBot-plotTop)*g/4;
+      grid+='<line x1="'+padL+'" x2="'+fullW+'" y1="'+y+'" y2="'+y+'" stroke="var(--bdr)" stroke-width="0.5"/>';
+      ax+='<text x="'+(AW-6)+'" y="'+(y+3)+'" text-anchor="end" fill="var(--ghost)" font-size="10">'+trendFmt(lv)+'</text>';
+    }
+    ax+='<line x1="'+(AW-0.5)+'" x2="'+(AW-0.5)+'" y1="'+padT+'" y2="'+(padT+iH)+'" stroke="var(--bdr)" stroke-width="1"/>';
+
+    var pts=series.map(function(r){ return xp(r[0])+','+yp(r[1]); }).join(' ');
+    var marks='';
+    pivots.forEach(function(p){
+      var x=xp(p.date), y=yp(p.level), top=(p.type==='TOP');
+      if(top){
+        marks+='<line x1="'+x+'" x2="'+x+'" y1="'+(y-19)+'" y2="'+(y-8)+'" stroke="var(--down)" stroke-width="2"/>'
+             +'<polygon points="'+(x-4.5)+','+(y-12)+' '+(x+4.5)+','+(y-12)+' '+x+','+(y-4)+'" fill="var(--down)"/>';
+      } else {
+        marks+='<line x1="'+x+'" x2="'+x+'" y1="'+(y+8)+'" y2="'+(y+19)+'" stroke="var(--up)" stroke-width="2"/>'
+             +'<polygon points="'+(x-4.5)+','+(y+12)+' '+(x+4.5)+','+(y+12)+' '+x+','+(y+4)+'" fill="var(--up)"/>';
+      }
+    });
+
+    svg.innerHTML=bands+mTicks+grid
+      +'<polyline points="'+pts+'" fill="none" stroke="var(--line)" stroke-width="1.6" stroke-linejoin="round"/>'
+      +marks;
+    if(axis) axis.innerHTML=ax;
+  }
+
+  var raf=null;
+  wrap.onscroll=function(){ if(raf) return; raf=requestAnimationFrame(function(){ raf=null; draw(); }); };
+  draw();
+  wrap.scrollLeft=fullW;
+  draw();
+
+  /* hover crosshair + tooltip */
+  function hoverMove(e){
+    var rect=svg.getBoundingClientRect();
+    var cx=e.clientX-rect.left;
+    var bp=null, bd=1e9;
+    for(var i=0;i<pivots.length;i++){ var dx=Math.abs(xp(pivots[i].date)-cx); if(dx<bd){bd=dx;bp=pivots[i];} }
+    var date, level, isPivot=false, ptype=null;
+    if(bp&&bd<=18){ date=bp.date; level=bp.level; isPivot=true; ptype=bp.type; }
+    else {
+      var wb=null, wd=1e9;
+      for(var k=0;k<series.length;k++){ var dx2=Math.abs(xp(series[k][0])-cx); if(dx2<wd){wd=dx2;wb=series[k];} }
+      if(!wb){ hoverLeave(); return; }
+      date=wb[0]; level=wb[1];
+    }
+    var xpx=xp(date), ypx=curYp?curYp(level):(padT+iH/2);
+    var col=isPivot?(ptype==='TOP'?'var(--down)':'var(--up)'):'var(--line)';
+    var old=document.getElementById('trendCrosshair'); if(old) old.remove();
+    svg.insertAdjacentHTML('beforeend',
+      '<g id="trendCrosshair"><line x1="'+xpx+'" x2="'+xpx+'" y1="'+padT+'" y2="'+(padT+iH)+'" stroke="var(--ghost)" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>'
+      +'<circle cx="'+xpx+'" cy="'+ypx+'" r="4" fill="'+col+'" stroke="var(--bg2)" stroke-width="1.5"/></g>');
+    if(tip&&area){
+      var dl=new Date(date).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'});
+      var name=isPivot?(ptype==='TOP'?'Top':'Bottom'):'Nifty 50';
+      tip.innerHTML='<div class="gl-tip-d">'+dl+'</div>'
+        +'<div class="gl-tip-r"><span class="gl-tip-sw" style="background:'+col+'"></span>'
+        +'<span class="gl-tip-n">'+name+'</span><span class="gl-tip-v">'+trendFmt(level)+'</span></div>';
+      tip.style.display='block';
+      var ar=area.getBoundingClientRect();
+      var tw=tip.offsetWidth, th=tip.offsetHeight;
+      var lx=e.clientX-ar.left+16, ty=e.clientY-ar.top+8;
+      if(lx+tw>ar.width-6) lx=e.clientX-ar.left-tw-16;
+      if(lx<6) lx=6;
+      if(ty+th>ar.height-6) ty=ar.height-th-6;
+      if(ty<6) ty=6;
+      tip.style.left=lx+'px'; tip.style.top=ty+'px';
+    }
+  }
+  function hoverLeave(){ var old=document.getElementById('trendCrosshair'); if(old) old.remove(); if(tip) tip.style.display='none'; }
+  wrap.onmousemove=hoverMove;
+  wrap.onmouseleave=hoverLeave;
+}
+
+/* up-cycle pairs: each BOTTOM → next TOP, with duration + return */
+function renderTrendTable(m){
+  var tb=document.getElementById('trendTableBody');
+  if(!tb) return;
+  var pivots=m.pivots, st=m.state, cycles=[];
+  for(var i=0;i<pivots.length;i++){
+    if(pivots[i].type!=='BOTTOM') continue;
+    var top=null;
+    for(var j=i+1;j<pivots.length;j++){ if(pivots[j].type==='TOP'){ top=pivots[j]; break; } }
+    if(top) cycles.push({b:pivots[i], t:top, open:false});
+    else if(st&&st.trend==='UPTREND') cycles.push({b:pivots[i], t:{date:st.lastDate, level:st.lastClose}, open:true});
+  }
+  if(!cycles.length){ tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--ghost);padding:24px">No completed up-cycles in range.</td></tr>'; return; }
+  cycles.reverse();
+  tb.innerHTML=cycles.map(function(cy){
+    var days=Math.round((new Date(cy.t.date)-new Date(cy.b.date))/864e5);
+    var ret=cy.t.level/cy.b.level-1, ptsv=cy.t.level-cy.b.level;
+    var dur=(days<60)?(days+' d'):(days/30.44).toFixed(1)+' mo';
+    var topCell=cy.open
+      ? '<span style="color:var(--warn);font-weight:600">forming</span><div class="cell-sub">'+trendFmt(cy.t.level)+'</div>'
+      : trendDay2(cy.t.date)+'<div class="cell-sub">'+trendFmt(cy.t.level)+'</div>';
+    return '<tr>'
+      +'<td>'+trendDay2(cy.b.date)+'<div class="cell-sub">'+trendFmt(cy.b.level)+'</div></td>'
+      +'<td>'+topCell+'</td>'
+      +'<td class="num">'+dur+'<div class="cell-sub">'+days+' d</div></td>'
+      +'<td class="num"><span style="color:var(--up);font-weight:700">+'+(ret*100).toFixed(1)+'%</span><div class="cell-sub">'+trendSigned(ptsv)+' pts</div></td>'
+      +'</tr>';
+  }).join('');
+}
+
+/* ============================================================
+   BOOT
+============================================================ */
+function boot(){
+  loadData().then(function(rows){
+    HISTORY=rows;
+    document.getElementById('bwLoading').style.display='none';
+    document.getElementById('bwApp').style.display='';
+    renderTrend();
+  }).catch(function(e){
+    document.getElementById('bwLoading').style.display='none';
+    var el=document.getElementById('bwError');
+    el.style.display='';
+    el.innerHTML='Could not load Nifty 50 data.<br><span style="color:var(--sub);font-size:.8rem">'+String(e.message||e)+'</span>';
+    console.error('[boluswealth]', e);
+  });
+}
+
+var _rt=null;
+window.addEventListener('resize', function(){ if(_rt) clearTimeout(_rt); _rt=setTimeout(function(){ if(HISTORY) renderTrend(); }, 160); });
+window.addEventListener('load', boot);
+</script>
+</body>
+</html>

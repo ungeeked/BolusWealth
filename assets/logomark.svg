@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="BolusWealth">
+  <defs>
+    <linearGradient id="bwTile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#161f33"/>
+      <stop offset="1" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="bwGrn" x1="0.15" y1="1" x2="0.9" y2="0">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="0.55" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#6ee7b7"/>
+    </linearGradient>
+    <filter id="bwGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bwTile)"/>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" fill="none" stroke="#ffffff" stroke-opacity="0.10"/>
+
+  <!-- faint index wave (tops & bottoms) -->
+  <path d="M11 37 L19 31 L26 41 L34 25 L42 38 L53 19" fill="none"
+        stroke="#2d3c59" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  <!-- a top marker on the faint wave -->
+  <circle cx="34" cy="25" r="2.2" fill="#f87171" opacity="0.8"/>
+
+  <!-- main growth line: dip to bottom, then surge up-right -->
+  <g filter="url(#bwGlow)">
+    <path d="M13 28 L25 45 L51 13" fill="none" stroke="url(#bwGrn)"
+          stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- arrowhead barbs at the tip -->
+    <path d="M51 13 L41.6 16.6 M51 13 L49.4 22.9" fill="none" stroke="url(#bwGrn)"
+          stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- bottom pivot node (the "buy") -->
+  <circle cx="25" cy="45" r="4.6" fill="#090d16" stroke="#34d399" stroke-width="3.2"/>
+</svg>

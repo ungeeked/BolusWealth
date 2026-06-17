@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="BolusWealth">
+  <defs>
+    <linearGradient id="fTile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#172033"/>
+      <stop offset="1" stop-color="#080b12"/>
+    </linearGradient>
+    <linearGradient id="fGrn" x1="0.1" y1="1" x2="0.95" y2="0">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#6ee7b7"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#fTile)"/>
+  <!-- bold dip -> surge -->
+  <path d="M11 26 L24 47 L53 10" fill="none" stroke="url(#fGrn)"
+        stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- arrowhead -->
+  <path d="M53 10 L42.5 13.6 M53 10 L50.8 21" fill="none" stroke="url(#fGrn)"
+        stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- bottom node -->
+  <circle cx="24" cy="47" r="5" fill="#080b12" stroke="#34d399" stroke-width="3.6"/>
+</svg>

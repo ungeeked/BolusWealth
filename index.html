@@ -13,14 +13,14 @@
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://boluswealth.pages.dev">
+<meta property="og:url" content="https://boluswealth.prashant-06f.workers.dev">
 <meta property="og:title" content="BolusWealth - Nifty 50 Wealth Maximization Model">
 <meta property="og:description" content="Buy the bottoms. Sell the tops. The Ned Davis / Martin Zweig model on the Nifty 50, live from NSE.">
-<meta property="og:image" content="https://boluswealth.pages.dev/assets/og-image.png">
+<meta property="og:image" content="https://boluswealth.prashant-06f.workers.dev/assets/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://boluswealth.pages.dev/assets/og-image.png">
+<meta name="twitter:image" content="https://boluswealth.prashant-06f.workers.dev/assets/og-image.png">
 <!-- Set theme before CSS parse to kill the flash. Light is default; dark only if chosen. -->
 <script>(function(){try{var t=localStorage.getItem('bw_theme');if(t!=='dark')document.documentElement.classList.add('light');}catch(e){document.documentElement.classList.add('light');}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,7 +82,11 @@ html.light .theme-pip{transform:translateX(0)}
 /* ── CHART ── */
 .chart-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--cond);font-weight:700;font-size:1.05rem;letter-spacing:.3px;margin-bottom:12px}
 .chart-title .tdim{font-family:var(--body);font-weight:400;font-size:.72rem;color:var(--ghost);letter-spacing:0}
-.legend{display:flex;gap:12px;margin-left:auto;flex-wrap:wrap}
+.tl-views{margin-left:auto;display:inline-flex;gap:2px;background:var(--bg3);border:1px solid var(--bdr);border-radius:9px;padding:2px}
+.tl-views button{font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.5px;color:var(--sub);background:none;border:none;padding:4px 12px;border-radius:7px;cursor:pointer;transition:background .15s,color .15s}
+.tl-views button:hover:not(.on){color:var(--txt)}
+.tl-views button.on{background:var(--line);color:#fff}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--sub);font-family:var(--mono)}
 .legend-dot{width:9px;height:9px;border-radius:2px}
 #trendChartArea{position:relative;display:flex;align-items:stretch;gap:0;width:100%}
@@ -160,7 +164,12 @@ footer a{color:var(--sub);text-decoration:none}
 
     <div class="card">
       <div class="chart-title">
-        Nifty 50 <span class="tdim">(Friday close · ~1yr in view · scroll ← for history · hover for values)</span>
+        <span class="ct-name">Nifty 50</span> <span class="tdim">(Friday close · hover for values)</span>
+        <span class="tl-views" id="tlViews">
+          <button data-days="365" onclick="tlSetView(365,this)">1Y</button>
+          <button data-days="1095" class="on" onclick="tlSetView(1095,this)">3Y</button>
+          <button data-days="1825" onclick="tlSetView(1825,this)">5Y</button>
+        </span>
         <div class="legend">
           <div class="legend-item"><span class="legend-dot" style="background:var(--line)"></span>Nifty 50</div>
           <div class="legend-item"><span class="legend-dot" style="background:var(--down)"></span>Top</div>
@@ -302,6 +311,18 @@ function computeFourPct(history, thrPct){
 }
 
 /* ============================================================
+   CHART VIEW (1Y / 3Y / 5Y) — days of history filling the viewport
+============================================================ */
+var TL_VIEW_DAYS=1095;   /* default 3Y */
+var TLM=null;            /* last computed model, for re-rendering on view change */
+function tlSetView(days, btn){
+  TL_VIEW_DAYS=days;
+  var box=document.getElementById('tlViews');
+  if(box) Array.prototype.forEach.call(box.children, function(b){ b.classList.toggle('on', b===btn); });
+  if(TLM) renderTrendChart(TLM);
+}
+
+/* ============================================================
    RENDER
 ============================================================ */
 function renderTrend(){
@@ -328,6 +349,7 @@ function renderTrend(){
       + '<div class="bw-sub">'+candTxt+'</div>';
   }
 
+  TLM=m;
   renderTrendChart(m);
   renderTrendTable(m);
 }
@@ -347,7 +369,8 @@ function renderTrendChart(m){
   var dMin=new Date(series[0][0]), dMax=new Date(series[series.length-1][0]);
   var span=(dMax-dMin)||1, totalDays=Math.max(1,span/864e5);
   var visW=Math.max(300, wrap.clientWidth||640);
-  var iW=Math.round((visW-padL-padR)*(totalDays/365));
+  var plotW=visW-padL-padR;
+  var iW=Math.max(plotW, Math.round(plotW*(totalDays/TL_VIEW_DAYS)));
   var fullW=iW+padL+padR;
   function xp(d){ return padL+((new Date(d)-dMin)/span)*iW; }
   function xToT(x){ return dMin.getTime()+((x-padL)/iW)*span; }
@@ -363,10 +386,11 @@ function renderTrendChart(m){
     bands+='<rect x="'+bx0+'" y="'+padT+'" width="'+Math.max(0,bx1-bx0)+'" height="'+iH+'" fill="var(--up)" opacity="0.07"/>';
   }
 
-  /* alternate-month axis */
+  /* month axis — density scales with the view window to avoid crowding */
+  var monthStep=TL_VIEW_DAYS<=365?2:(TL_VIEW_DAYS<=1095?4:6);
   var mTicks='', mt=new Date(dMin.getFullYear(), dMin.getMonth(), 1);
   for(; mt<=dMax; mt.setMonth(mt.getMonth()+1)){
-    if(mt.getMonth()%2!==0) continue;
+    if(mt.getMonth()%monthStep!==0) continue;
     if(mt<dMin) continue;
     var mx=xp(mt.toISOString().slice(0,10));
     var lbl=MON[mt.getMonth()]+(mt.getMonth()===0?" '"+String(mt.getFullYear()).slice(2):"");

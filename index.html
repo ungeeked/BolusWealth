@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <!-- Warm up DNS+TLS to the SectorScope Worker (cross-origin data source). -->
 <link rel="preconnect" href="https://sectorscope.prashant-06f.workers.dev" crossorigin>
-<title>BolusWealth - Nifty 50 Wealth Maximization Model</title>
-<meta name="description" content="Buy the bottoms. Sell the tops. The Ned Davis / Martin Zweig model on the Nifty 50, live from NSE.">
+<title>BolusWealth - Nifty 50 Modified Dow Theory</title>
+<meta name="description" content="The Ned Davis / Martin Zweig model on the Nifty 50: a swing top or bottom is confirmed only after a 4% reversal that also spans more than 31 days.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
@@ -14,8 +14,8 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://boluswealth.prashant-06f.workers.dev">
-<meta property="og:title" content="BolusWealth - Nifty 50 Wealth Maximization Model">
-<meta property="og:description" content="Buy the bottoms. Sell the tops. The Ned Davis / Martin Zweig model on the Nifty 50, live from NSE.">
+<meta property="og:title" content="BolusWealth - Nifty 50 Modified Dow Theory">
+<meta property="og:description" content="The Ned Davis / Martin Zweig model on the Nifty 50: a swing top or bottom is confirmed only after a 4% reversal that also spans more than 31 days.">
 <meta property="og:image" content="https://boluswealth.prashant-06f.workers.dev/assets/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -152,8 +152,8 @@ footer a{color:var(--sub);text-decoration:none}
 
 <div class="wrap">
   <div class="intro">
-    <h1>Nifty 50 - Tops &amp; Bottoms</h1>
-    <p>Based on Ned Davis / Martin Zweig's model: a swing <span style="color:var(--down)">top</span> is confirmed when a weekly close falls 4% below a prior high, a <span style="color:var(--up)">bottom</span> when it rises 4% above a prior low. Below: the live signal, the chart, and every bottom→top up-cycle.</p>
+    <h1>Nifty 50 - Modified Dow Theory</h1>
+    <p>Using Ned Davis / Martin Zweig's model to identify swing top or bottom on the Nifty 50 is confirmed only after a 4% reversal that also spans more than 31 days. Hover the chart for the index level and PE ratio on any date.</p>
   </div>
 
   <div id="bwLoading" class="bw-loading"><div class="spinner"></div>Loading</div>
@@ -161,6 +161,7 @@ footer a{color:var(--sub);text-decoration:none}
 
   <div id="bwApp" style="display:none">
     <div id="trendBadge"></div>
+
 
     <div class="card">
       <div class="chart-title">
@@ -196,7 +197,7 @@ footer a{color:var(--sub);text-decoration:none}
     </div>
 
     <div class="note">
-      <strong>Reading it:</strong> A red arrow marks a swing <strong style="color:var(--down)">top</strong>, a green arrow a swing <strong style="color:var(--up)">bottom</strong>; hover anywhere for the date and index level. The reversal confirms on a weekly close 4% off the swing extreme, so the latest leg may still be forming (see the banner). The table pairs each bottom with the following top and shows the up-cycle's length and gain. <em>Mechanical model for study only - not investment advice.</em>
+      <strong>Reading it:</strong> a red arrow marks a confirmed swing <strong style="color:var(--down)">top</strong>, a green arrow a swing <strong style="color:var(--up)">bottom</strong> - each one a 4% reversal that also spanned more than 31 days. Hover anywhere for the date, index level and PE ratio. The latest swing may still be forming (see the banner). The table pairs each bottom with the following top and shows the up-cycle's length and gain. <em>Mechanical model for study only - not investment advice.</em>
     </div>
   </div>
 </div>
@@ -228,10 +229,10 @@ function normaliseSector(raw){
   if(rows.length&&Array.isArray(rows[0])&&typeof rows[0][0]==='string'&&isNaN(rows[0][0])) rows=rows.slice(1);
   var out=[];
   for(var i=0;i<rows.length;i++){
-    var r=rows[i], date, close;
-    if(Array.isArray(r)){ date=String(r[0]||''); close=+r[1]; }
-    else { date=String(r.date||r.Date||''); close=+(r.close||r.price||r.index||r.value); }
-    if(date && isFinite(close) && close>0) out.push([date, close]);
+    var r=rows[i], date, close, pe;
+    if(Array.isArray(r)){ date=String(r[0]||''); close=+r[1]; pe=(r.length>2)?+r[2]:NaN; }
+    else { date=String(r.date||r.Date||''); close=+(r.close||r.price||r.index||r.value); pe=+(r.pe||r.PE||r.peRatio||r.pE||NaN); }
+    if(date && isFinite(close) && close>0) out.push([date, close, (isFinite(pe)&&pe>0)?pe:null]);
   }
   out.sort(function(a,b){ return a[0]<b[0]?-1:(a[0]>b[0]?1:0); });
   return out;
@@ -251,9 +252,15 @@ function loadData(){
 }
 
 /* ============================================================
-   4% MODEL - weekly Friday closes (labelled at the Monday)
+   MODIFIED 4% MODEL - weekly Friday closes (labelled at the Monday)
+
+   A swing top or bottom is confirmed only after a 4% reversal that
+   ALSO spans more than 31 days. Both thresholds are tunable below.
 ============================================================ */
-var TREND_THR=4;
+var DOW={
+  THR:        0.04,  /* reversal amplitude         */
+  WIDTH_DAYS: 31     /* min swing span, days       */
+};
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 function trendFmt(n){ try{ return Math.round(n).toLocaleString('en-IN'); }catch(e){ return String(Math.round(n)); } }
@@ -261,53 +268,88 @@ function trendSigned(n){ var r=Math.round(n); return (r>=0?'+':'\u2212')+Math.ab
 function trendDay2(ds){ var d=new Date(ds); return d.getDate()+' '+MON[d.getMonth()]+" '"+String(d.getFullYear()).slice(2); }
 function typeLabel(t){ return (t==='TOP')?'top':'bottom'; }
 
-/* weekly value = last trading day's close (Friday), labelled at the week's Monday */
+/* weekly value = last trading day's close (Friday), labelled at the week's
+   Monday; trailing PE carried from the same (last) bar of the week */
 function resampleWeekly(rows){
-  var map={}, order=[];
+  var mapC={}, mapP={}, order=[];
   for(var i=0;i<rows.length;i++){
     var d=new Date(rows[i][0]); var dow=(d.getDay()+6)%7;
     var mon=new Date(d); mon.setDate(d.getDate()-dow);
     var key=mon.toISOString().slice(0,10);
-    if(map[key]===undefined) order.push(key);
-    map[key]=rows[i][1];
+    if(mapC[key]===undefined) order.push(key);
+    mapC[key]=rows[i][1];
+    mapP[key]=(rows[i].length>2)?rows[i][2]:null;
   }
-  return order.map(function(k){ return [k, map[k]]; });
+  return order.map(function(k){ return [k, mapC[k], mapP[k]]; });
 }
 
-function computeFourPct(history, thrPct){
-  var thr=thrPct/100;
-  var series=resampleWeekly(history).filter(function(r){ return r[1]>0; });
-  var out={series:series, pivots:[], state:null};
-  if(series.length<2) return out;
-
-  var pos='flat', hi=series[0][1], hiDate=series[0][0], lo=series[0][1], loDate=series[0][0];
-  var pivots=[];
+/* Stage 1 - 4% ZigZag pivots. Each is tagged with the bar that
+   CONFIRMED it (confirmIdx, the first bar 4% past the extreme - causal,
+   no look-ahead) and its A->C structure width (prior pivot -> confirm). */
+function dowPivots(series, thr){
+  var piv=[];
+  if(series.length<2) return piv;
+  var pos='flat', hi=series[0][1], hiIdx=0, lo=series[0][1], loIdx=0;
+  function push(type, idx, cIdx){
+    piv.push({ idx:idx, date:series[idx][0], level:series[idx][1],
+               type:type, confirmIdx:cIdx, confirmDate:series[cIdx][0] });
+  }
   for(var i=1;i<series.length;i++){
-    var c=series[i][1], dt=series[i][0];
+    var c=series[i][1];
     if(pos==='in'){
-      if(c>hi){hi=c;hiDate=dt;}
-      else if(c<=hi*(1-thr)){ pivots.push({date:hiDate,type:'TOP',level:hi}); pos='out'; lo=c; loDate=dt; }
+      if(c>hi){hi=c;hiIdx=i;}
+      else if(c<=hi*(1-thr)){ push('TOP',hiIdx,i); pos='out'; lo=c; loIdx=i; }
     } else if(pos==='out'){
-      if(c<lo){lo=c;loDate=dt;}
-      else if(c>=lo*(1+thr)){ pivots.push({date:loDate,type:'BOTTOM',level:lo}); pos='in'; hi=c; hiDate=dt; }
+      if(c<lo){lo=c;loIdx=i;}
+      else if(c>=lo*(1+thr)){ push('BOTTOM',loIdx,i); pos='in'; hi=c; hiIdx=i; }
     } else {
-      if(c>hi){hi=c;hiDate=dt;} if(c<lo){lo=c;loDate=dt;}
-      if(c>=lo*(1+thr)){ pivots.push({date:loDate,type:'BOTTOM',level:lo}); pos='in'; hi=c; hiDate=dt; }
-      else if(c<=hi*(1-thr)){ pivots.push({date:hiDate,type:'TOP',level:hi}); pos='out'; lo=c; loDate=dt; }
+      if(c>hi){hi=c;hiIdx=i;} if(c<lo){lo=c;loIdx=i;}
+      if(c>=lo*(1+thr)){ push('BOTTOM',loIdx,i); pos='in'; hi=c; hiIdx=i; }
+      else if(c<=hi*(1-thr)){ push('TOP',hiIdx,i); pos='out'; lo=c; loIdx=i; }
     }
   }
+  for(var k=0;k<piv.length;k++){
+    var aIdx=(k>0)?piv[k-1].idx:0;
+    var days=Math.round((new Date(piv[k].confirmDate)-new Date(series[aIdx][0]))/864e5);
+    piv[k].widthDays=days;
+    piv[k].sig=days>DOW.WIDTH_DAYS;   /* width filter: only wide swings count */
+  }
+  return piv;
+}
 
-  var lastClose=series[series.length-1][1], lastDate=series[series.length-1][0];
-  var lastPivot=pivots.length?pivots[pivots.length-1]:null;
-  var st;
-  if(pos==='in'){ var t1=hi*(1-thr);
-    st={trend:'UPTREND',lastPivot:lastPivot,candType:'TOP',candLevel:hi,candDate:hiDate,trigger:t1,distPct:(t1/lastClose-1)*100,lastClose:lastClose,lastDate:lastDate}; }
-  else if(pos==='out'){ var t2=lo*(1+thr);
-    st={trend:'DOWNTREND',lastPivot:lastPivot,candType:'BOTTOM',candLevel:lo,candDate:loDate,trigger:t2,distPct:(t2/lastClose-1)*100,lastClose:lastClose,lastDate:lastDate}; }
-  else { st={trend:'FORMING',lastPivot:null,candType:null,lastClose:lastClose,lastDate:lastDate}; }
-
-  out.pivots=pivots; out.state=st;
+/* Significant-pivot model: 4% reversals that also span >31 days.
+   PE is carried per weekly bar for the hover tooltip only. */
+function computeModel(history){
+  var weekly=resampleWeekly(history).filter(function(r){ return r[1]>0; });
+  var series=weekly.map(function(r){ return [r[0], r[1]]; });
+  var pe=weekly.map(function(r){ return (r[2]!=null&&isFinite(r[2])&&r[2]>0)?r[2]:null; });
+  var out={series:series, pivots:[], pe:pe, state:null};
+  if(series.length<2) return out;
+  var sig=dowPivots(series, DOW.THR).filter(function(p){ return p.sig; });
+  out.pivots=sig;
+  out.state=modelState(series, sig);
   return out;
+}
+
+/* Live banner: current swing direction + the forming pivot and the
+   weekly close that would confirm it (4% off the running extreme). */
+function modelState(series, sig){
+  var i=series.length-1, lastClose=series[i][1], lastDate=series[i][0];
+  if(!sig.length) return {trend:'FORMING', lastPivot:null, lastClose:lastClose, lastDate:lastDate};
+  var last=sig[sig.length-1];
+  var hi=-Infinity, hiD=null, lo=Infinity, loD=null;
+  for(var k=last.idx;k<series.length;k++){
+    if(series[k][1]>hi){ hi=series[k][1]; hiD=series[k][0]; }
+    if(series[k][1]<lo){ lo=series[k][1]; loD=series[k][0]; }
+  }
+  if(last.type==='BOTTOM'){
+    var t1=hi*(1-DOW.THR);
+    return {trend:'UPTREND', lastPivot:last, candType:'TOP', candLevel:hi, candDate:hiD,
+            trigger:t1, distPct:(t1/lastClose-1)*100, lastClose:lastClose, lastDate:lastDate};
+  }
+  var t2=lo*(1+DOW.THR);
+  return {trend:'DOWNTREND', lastPivot:last, candType:'BOTTOM', candLevel:lo, candDate:loD,
+          trigger:t2, distPct:(t2/lastClose-1)*100, lastClose:lastClose, lastDate:lastDate};
 }
 
 /* ============================================================
@@ -327,13 +369,13 @@ function tlSetView(days, btn){
 ============================================================ */
 function renderTrend(){
   if(!HISTORY||HISTORY.length<2) return;
-  var m=computeFourPct(HISTORY, TREND_THR);
+  var m=computeModel(HISTORY);
 
   var st=m.state, badge=document.getElementById('trendBadge');
   if(st&&badge){
     var up=(st.trend==='UPTREND'), down=(st.trend==='DOWNTREND');
     var col=up?'var(--up)':(down?'var(--down)':'var(--warn)');
-    var tri=up?'▲':(down?'▼':'◆');
+    var tri=up?'\u25b2':(down?'\u25bc':'\u25c6');
     var lp=st.lastPivot;
     var lpTxt=lp?(typeLabel(lp.type)+' on <strong>'+trendDay2(lp.date)+'</strong> @ <strong>'+trendFmt(lp.level)+'</strong>')
                 :'no confirmed pivot yet';
@@ -361,7 +403,7 @@ function renderTrendChart(m){
   var area=document.getElementById('trendChartArea');
   var tip=document.getElementById('trendTip');
   if(!svg||!wrap) return;
-  var series=m.series, pivots=m.pivots;
+  var series=m.series, pivots=m.pivots||[], pe=m.pe||[];
   if(series.length<2){ svg.innerHTML=''; if(axis) axis.innerHTML=''; return; }
 
   var H=320, padT=14, padB=30, iH=H-padT-padB, AW=48, padL=8, padR=14;
@@ -457,13 +499,13 @@ function renderTrendChart(m){
     var cx=e.clientX-rect.left;
     var bp=null, bd=1e9;
     for(var i=0;i<pivots.length;i++){ var dx=Math.abs(xp(pivots[i].date)-cx); if(dx<bd){bd=dx;bp=pivots[i];} }
-    var date, level, isPivot=false, ptype=null;
-    if(bp&&bd<=18){ date=bp.date; level=bp.level; isPivot=true; ptype=bp.type; }
+    var date, level, isPivot=false, ptype=null, idx=-1;
+    if(bp&&bd<=18){ date=bp.date; level=bp.level; isPivot=true; ptype=bp.type; idx=bp.idx; }
     else {
-      var wb=null, wd=1e9;
-      for(var k=0;k<series.length;k++){ var dx2=Math.abs(xp(series[k][0])-cx); if(dx2<wd){wd=dx2;wb=series[k];} }
+      var wb=null, wd=1e9, wbIdx=-1;
+      for(var k=0;k<series.length;k++){ var dx2=Math.abs(xp(series[k][0])-cx); if(dx2<wd){wd=dx2;wb=series[k];wbIdx=k;} }
       if(!wb){ hoverLeave(); return; }
-      date=wb[0]; level=wb[1];
+      date=wb[0]; level=wb[1]; idx=wbIdx;
     }
     var xpx=xp(date), ypx=curYp?curYp(level):(padT+iH/2);
     var col=isPivot?(ptype==='TOP'?'var(--down)':'var(--up)'):'var(--line)';
@@ -474,9 +516,12 @@ function renderTrendChart(m){
     if(tip&&area){
       var dl=new Date(date).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'});
       var name=isPivot?(ptype==='TOP'?'Top':'Bottom'):'Nifty 50';
+      var peVal=(idx>=0&&pe[idx]!=null&&isFinite(pe[idx]))?pe[idx].toFixed(1):'\u2014';
       tip.innerHTML='<div class="gl-tip-d">'+dl+'</div>'
         +'<div class="gl-tip-r"><span class="gl-tip-sw" style="background:'+col+'"></span>'
-        +'<span class="gl-tip-n">'+name+'</span><span class="gl-tip-v">'+trendFmt(level)+'</span></div>';
+        +'<span class="gl-tip-n">'+name+'</span><span class="gl-tip-v">'+trendFmt(level)+'</span></div>'
+        +'<div class="gl-tip-r"><span class="gl-tip-sw" style="background:transparent"></span>'
+        +'<span class="gl-tip-n">PE</span><span class="gl-tip-v">'+peVal+'</span></div>';
       tip.style.display='block';
       var ar=area.getBoundingClientRect();
       var tw=tip.offsetWidth, th=tip.offsetHeight;
@@ -493,11 +538,12 @@ function renderTrendChart(m){
   wrap.onmouseleave=hoverLeave;
 }
 
-/* up-cycle pairs: each BOTTOM → next TOP, with duration + return */
+/* trade log: each buy → sell, with size, valuation at entry, hold and return */
+/* up-cycle pairs: each confirmed bottom → next confirmed top, with duration + return */
 function renderTrendTable(m){
   var tb=document.getElementById('trendTableBody');
   if(!tb) return;
-  var pivots=m.pivots, st=m.state, cycles=[];
+  var pivots=m.pivots||[], st=m.state, cycles=[];
   for(var i=0;i<pivots.length;i++){
     if(pivots[i].type!=='BOTTOM') continue;
     var top=null;
